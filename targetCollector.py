@@ -8,6 +8,7 @@ from colorama import Fore, Style
 from optparse import OptionParser
 from urllib3.exceptions import InsecureRequestWarning
 
+# Disable SSL warnings
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 alive200 = []
@@ -16,11 +17,13 @@ alive302 = []
 userAgent = {'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:81.0) Gecko/20100101 Firefox/81.0'}
 
 def processDomainList(wordlist, timeout=3.0):
+    # if `wordlist` is not coming from stdin
     if os.path.isfile(wordlist):
         with open(wordlist, 'r') as f:
             for subdomain in f.readlines():
                 subdomain = subdomain.strip()
                 try:
+                    # make basic GET and determine status_code
                     request = requests.get(
                         'https://' + subdomain,
                         timeout=timeout,
@@ -28,6 +31,7 @@ def processDomainList(wordlist, timeout=3.0):
                         allow_redirects=False,
                         verify=False
                     )
+                    # grabbing the status codes
                     if request.status_code == 200:
                         print(f'{Fore.WHITE}[{Fore.GREEN}+{Fore.WHITE}] ' + subdomain + ' : ' + Fore.GREEN + str(request.status_code))
                         alive200.append('https://' + subdomain)
@@ -39,6 +43,7 @@ def processDomainList(wordlist, timeout=3.0):
                         alive302.append('https://' + subdomain + ' -302-> ' + request.headers.get('location'))
                     elif request.status_code == 403:
                         print(f'{Fore.WHITE}[{Fore.YELLOW}*{Fore.WHITE}] ' + subdomain + ' : ' + Fore.YELLOW + str(request.status_code))
+                # If SSL fails, lets try port 80 (http)
                 except requests.exceptions.ConnectionError:
                     if not options.silent:
                         print(f'{Fore.WHITE}[{Fore.YELLOW}-{Fore.WHITE}] {Fore.YELLOW}Request timed out.{Fore.WHITE} Trying http')
@@ -49,9 +54,11 @@ def processDomainList(wordlist, timeout=3.0):
                             allow_redirects=False,
                             timeout=timeout
                         )
+                        # ToDo: finish implementing status code checks for http
                         if request.status_code == 200:
                             print(subdomain + ' : ' + str(request.status_code))
                             alive200.append('http://' + subdomain)
+                    # If http also fails, assume the domain is dead
                     except requests.exceptions.ConnectionError:
                         if not options.silent:
                             print(f'[{Fore.RED}*{Fore.WHITE}] {Fore.RED} ' + subdomain + f'{Fore.WHITE} did not respond. Moving on')
@@ -61,6 +68,10 @@ def processDomainList(wordlist, timeout=3.0):
                         print(f'{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}] Read timed out. {subdomain} may not exist ' + str(e))
                         pass
     else:
+        """
+        runs when data is piped into targetCollector.
+        essentially the same code as above, not the most efficient but does work.
+        """
         wordlist = wordlist.strip('\n')
         with open('temp.txt', 'w+') as _f:
             _f.write(wordlist)
@@ -114,18 +125,22 @@ def processDomainList(wordlist, timeout=3.0):
         os.remove('temp.txt')
 
 def main():
+    # targetCollector requires an output file to be specified
     if not options.outfile:
         print(f'{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}] Please specify an output file\n')
         parser.print_help()
         sys.exit()
+    # if -w is not used, take data from stdin
     if not options.wordlist:
         wordlist = sys.stdin.read()
         processDomainList(wordlist)
+    # else, use -w to specify wordlist
     elif options.wordlist:
         wordlist = options.wordlist
         processDomainList(wordlist)
 
 if __name__ == '__main__':
+    # process command line options
     usage = f"""
     {Style.BRIGHT}\n[{Fore.YELLOW}*{Fore.WHITE}] python3 targetCollector.py -w /path/to/wordlist -o targets.txt
 [{Fore.YELLOW}*{Fore.WHITE}] targetCollector -w /path/to/wordlist -s -o targets.txt
