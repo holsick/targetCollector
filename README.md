@@ -28,4 +28,9 @@ Options:
   -o OUTFILE, --outfile=OUTFILE
                         File to write target list to
 ```
+![targetCollector](./targetCollector.PNG)
 
+### Improvements
+
+**Please do let me know how I can improve this script! I would ideally like it to be much faster while also yielding accurate results.**
+**Plenty of room for improvement!**
