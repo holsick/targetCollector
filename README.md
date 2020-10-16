@@ -27,6 +27,9 @@ Options:
   -s, --silent          Only show live domains
   -o OUTFILE, --outfile=OUTFILE
                         File to write target list to
+  -t TIMEOUT, --timeout=TIMEOUT
+                        http request timeout value (specify float value eg.
+                        3.0)
 ```
 ![targetCollector](./targetCollector.PNG)
 
