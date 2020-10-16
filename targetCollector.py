@@ -125,7 +125,8 @@ def main():
 
 		if os.path.exists('temp.txt'):
 			os.remove('temp.txt')
-
+			
+	# if -w, dont create temp file
 	elif options.wordlist:
 		collector = TargetCollector(options.wordlist, options.outfile, options.silent, options.timeout)
 		collector.processDomainlist()
