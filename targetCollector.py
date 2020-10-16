@@ -11,144 +11,138 @@ from urllib3.exceptions import InsecureRequestWarning
 # Disable SSL warnings
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
-alive200 = []
-alive301 = []
-alive302 = []
-userAgent = {'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:81.0) Gecko/20100101 Firefox/81.0'}
+# colors
+bright = Style.BRIGHT
+w = Fore.WHITE
+g = Fore.GREEN
+b = Fore.BLUE
+r = Fore.RED
+y = Fore.YELLOW
+m = Fore.MAGENTA
 
-def processDomainList(wordlist, timeout=3.0):
-    # if `wordlist` is not coming from stdin
-    if os.path.isfile(wordlist):
-        with open(wordlist, 'r') as f:
-            for subdomain in f.readlines():
-                subdomain = subdomain.strip()
-                try:
-                    # make basic GET and determine status_code
-                    request = requests.get(
-                        'https://' + subdomain,
-                        timeout=timeout,
-                        headers=userAgent,
-                        allow_redirects=False,
-                        verify=False
-                    )
-                    # grabbing the status codes
-                    if request.status_code == 200:
-                        print(f'{Fore.WHITE}[{Fore.GREEN}+{Fore.WHITE}] ' + subdomain + ' : ' + Fore.GREEN + str(request.status_code))
-                        alive200.append('https://' + subdomain)
-                    elif request.status_code == 301:
-                        print(f'{Fore.WHITE}[{Fore.MAGENTA}*{Fore.WHITE}] ' + subdomain + ' : ' + Fore.MAGENTA + str(request.status_code) + ' -> ' + Fore.GREEN + request.headers.get('location') + Fore.WHITE)
-                        alive301.append('https://' + subdomain + ' -301-> ' + request.headers.get('location'))
-                    elif request.status_code == 302:
-                        print(f'{Fore.WHITE}[{Fore.BLUE}*{Fore.WHITE}] ' + subdomain + ' : ' + Fore.BLUE + str(request.status_code) + ' -> ' + Fore.GREEN + request.headers.get('location') + Fore.WHITE)
-                        alive302.append('https://' + subdomain + ' -302-> ' + request.headers.get('location'))
-                    elif request.status_code == 403:
-                        print(f'{Fore.WHITE}[{Fore.YELLOW}*{Fore.WHITE}] ' + subdomain + ' : ' + Fore.YELLOW + str(request.status_code))
-                # If SSL fails, lets try port 80 (http)
-                except requests.exceptions.ConnectionError:
-                    if not options.silent:
-                        print(f'{Fore.WHITE}[{Fore.YELLOW}-{Fore.WHITE}] {Fore.YELLOW}Request timed out.{Fore.WHITE} Trying http')
-                    try:
-                        request = requests.get(
-                            'http://' + subdomain,
-                            headers=userAgent,
-                            allow_redirects=False,
-                            timeout=timeout
-                        )
-                        # ToDo: finish implementing status code checks for http
-                        if request.status_code == 200:
-                            print(subdomain + ' : ' + str(request.status_code))
-                            alive200.append('http://' + subdomain)
-                    # If http also fails, assume the domain is dead
-                    except requests.exceptions.ConnectionError:
-                        if not options.silent:
-                            print(f'[{Fore.RED}*{Fore.WHITE}] {Fore.RED} ' + subdomain + f'{Fore.WHITE} did not respond. Moving on')
-                            pass
-                except Exception as e:
-                    if not options.silent:
-                        print(f'{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}] Read timed out. {subdomain} may not exist ' + str(e))
-                        pass
-    else:
-        """
-        runs when data is piped into targetCollector.
-        essentially the same code as above, not the most efficient but does work.
-        """
-        wordlist = wordlist.strip('\n')
-        with open('temp.txt', 'w+') as _f:
-            _f.write(wordlist)
-        with open('temp.txt', 'r') as __f:
-            for subdomain in __f.readlines():
-                subdomain = subdomain.strip()
-                try:
-                    request = requests.get(
-                        'https://' + subdomain,
-                        headers=userAgent,
-                        timeout=timeout,
-                        allow_redirects=False,
-                        verify=False
-                    )
-                    if request.status_code == 200:
-                        print(f'{Fore.WHITE}[{Fore.GREEN}+{Fore.WHITE}] ' + subdomain + ' : ' + Fore.GREEN + str(request.status_code))
-                        alive200.append('https://' + subdomain)
-                    elif request.status_code == 301:
-                        print(f'{Fore.WHITE}[{Fore.MAGENTA}*{Fore.WHITE}] ' + subdomain + ' : ' + Fore.MAGENTA + str(request.status_code) + ' -> ' + Fore.GREEN + request.headers.get('location') + Fore.WHITE)
-                        alive301.append('https://' + subdomain + ' -301-> ' + request.headers.get('location'))
-                    elif request.status_code == 302:
-                        print(f'{Fore.WHITE}[{Fore.BLUE}*{Fore.WHITE}] ' + subdomain + ' : ' + Fore.BLUE + str(request.status_code) + ' -> ' + Fore.GREEN + request.headers.get('location') + Fore.WHITE)
-                        alive302.append('https://' + subdomain + ' -302-> ' + request.headers.get('location'))
-                    elif request.status_code == 403:
-                        print(f'{Fore.WHITE}[{Fore.YELLOW}*{Fore.WHITE}] ' + subdomain + ' : ' + Fore.YELLOW + str(request.status_code))
-                except requests.exceptions.ConnectionError:
-                    if not options.silent:
-                        print(f'{Fore.WHITE}[{Fore.YELLOW}-{Fore.WHITE}] {Fore.YELLOW}Request timed out.{Fore.WHITE} Trying http')
-                    try:
-                        request = requests.get(
-                            'http://' + subdomain,
-                            headers=userAgent,
-                            allow_redirects=False,
-                            timeout=timeout
-                        )
-                        if request.status_code == 200:
-                            print(f'{Fore.WHITE}[{Fore.GREEN}+{Fore.WHITE}] ' + subdomain + ' : ' + Fore.GREEN + str(request.status_code))
-                            alive200.append('http://' + subdomain)
-                    except requests.exceptions.ConnectionError:
-                        if not options.silent:
-                            print(f'{Fore.WHITE}[{Fore.RED}*{Fore.WHITE}]{Fore.RED} ' + subdomain + f'{Fore.WHITE} did not respond. Moving on')
-                            pass
-                except Exception:
-                    if not options.silent:
-                        print(f'{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}] Read timed out. {subdomain} may not exist')
-                        pass
-    with open(options.outfile, 'w+') as ___f:
-        for target in (alive200 + alive301 + alive302):
-            ___f.write(target + '\n')
-    if os.path.exists('temp.txt'):
-        os.remove('temp.txt')
+class TargetCollector:
+
+	alive200, alive301, alive302 = [], [], []
+	userAgent = {'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:81.0) Gecko/20100101 Firefox/81.0'}
+
+	def __init__(self, wordlist, outfile, silent=False, timeout=3.0):
+		self.wordlist = wordlist
+		self.timeout = options.timeout
+		self.silent = options.silent
+		self.outfile = options.outfile
+
+	def processDomainlist(self):
+
+		with open(self.wordlist, 'r') as f:
+			for subdomain in f.readlines():
+				subdomain = subdomain.strip()
+				try:
+					request = requests.get(
+						'https://' + subdomain,
+						timeout=self.timeout,
+						headers=self.userAgent,
+						allow_redirects=False,
+						verify=False
+					)
+
+					if request.status_code == 200:
+						print(f'{w}[{g}+{w}] ' + subdomain + ' : ' + g + str(request.status_code))
+						self.alive200.append('https://' + subdomain)
+
+					elif request.status_code == 301:
+						print(f'{w}[{m}*{w}] ' + subdomain + ' : ' + m + str(request.status_code) + ' -> ' + g + request.headers.get('location') + w)
+						self.alive301.append('https://' + subdomain + ' -301-> ' + request.headers.get('location'))
+
+					elif request.status_code == 302:
+						print(f'{w}[{b}*{w}] ' + subdomain + ' : ' + b + str(request.status_code) + ' -> ' + g + request.headers.get('location') + w)
+						self.alive302.append('https://' + subdomain + ' -302-> ' + request.headers.get('location'))
+
+					elif request.status_code == 403:
+						print(f'{w}[{y}*{w}] ' + subdomain + ' : ' + y + str(request.status_code))
+
+				# if SSL fails, lets try port 80 (http)
+				except requests.exceptions.ConnectionError:
+					if not self.silent:
+						print(f'{w}[{y}-{w}] {y}Request timed out.{w} Trying http')
+
+					try:
+						request = requests.get(
+							'http://' + subdomain,
+                			timeout=self.timeout,
+                			headers=self.userAgent,
+                			allow_redirects=False
+                		)
+						if request.status_code == 200:
+							print(f'{w}[{g}+{w}] ' + subdomain + ' : ' + g + str(request.status_code) + w)
+							self.alive200.append('http://' + subdomain)
+
+						elif request.status_code == 301:
+							print(f'{w}[{m}*{w}] ' + subdomain + ' : ' + m + str(request.status_code) + ' -> ' + g + request.headers.get('location') + w)
+							self.alive301.append('http://' + subdomain + ' -301-> ' + request.headers.get('location'))
+
+						elif request.status_code == 302:
+							print(f'{w}[{b}*{w}] ' + subdomain + ' : ' + b + str(request.status_code) + ' -> ' + g + request.headers.get('location') + w)
+							self.alive302.append('http://' + subdomain + ' -302-> ' + request.headers.get('location'))
+
+						elif request.status_code == 403:
+							print(f'{w}[{y}*{w}] ' + subdomain + ' : ' + y + str(request.status_code))
+
+					# if http also fails, assume the domain is dead
+					except requests.exceptions.ConnectionError:
+						if not self.silent:
+							print(f'[{Fore.RED}*{Fore.WHITE}] {Fore.RED} ' + subdomain + f'{Fore.WHITE} did not respond. Moving on')
+							pass
+
+				except Exception as e:
+					if not self.silent:
+						print(f'{w}[{r}!{w}] Read timed out. {subdomain} may not exist ' + str(e))
+						pass
+		with open(self.outfile, 'w+') as _f:
+			for target in (self.alive200 + self.alive301 + self.alive302):
+				_f.write(target + '\n')
 
 def main():
-    # targetCollector requires an output file to be specified
-    if not options.outfile:
-        print(f'{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}] Please specify an output file\n')
-        parser.print_help()
-        sys.exit()
-    # if -w is not used, take data from stdin
-    if not options.wordlist:
-        wordlist = sys.stdin.read()
-        processDomainList(wordlist)
-    # else, use -w to specify wordlist
-    elif options.wordlist:
-        wordlist = options.wordlist
-        processDomainList(wordlist)
+	if not options.outfile:
+		print(f'{w}[{r}!{w}] Please specify an output file\n')
+		parser.print_help()
+		sys.exit()
+
+	# if -w is not used, take data from stdin and create a temporary wordlist file
+	if not options.wordlist:
+		wordlist = sys.stdin.read()
+		wordlist = wordlist.strip()
+		with open('temp.txt', 'w+') as __f:
+			__f.write(wordlist)
+
+		# delete temporary file after finishing or user quits
+		# having troubles deleting the file on Windows
+		try:
+			collector = TargetCollector('temp.txt', options.outfile, options.silent, options.timeout)
+			collector.processDomainlist()
+		except KeyboardInterrupt:
+			if os.path.exists('temp.txt'):
+				os.remove('temp.txt')
+
+		if os.path.exists('temp.txt'):
+			os.remove('temp.txt')
+
+	elif options.wordlist:
+		collector = TargetCollector(options.wordlist, options.outfile, options.silent, options.timeout)
+		collector.processDomainlist()
+
 
 if __name__ == '__main__':
-    # process command line options
-    usage = f"""
-    {Style.BRIGHT}\n[{Fore.YELLOW}*{Fore.WHITE}] python3 targetCollector.py -w /path/to/wordlist -o targets.txt
-[{Fore.YELLOW}*{Fore.WHITE}] targetCollector -w /path/to/wordlist -s -o targets.txt
-[{Fore.YELLOW}*{Fore.WHITE}] amass enum -d example.com -o subdomains.txt && cat subdomains.txt | targetCollector -s -o targets.txt
+	# process command line options
+	usage = f"""
+    {bright}\n[{y}*{w}] python3 targetCollector.py -w /path/to/wordlist -o targets.txt
+[{y}*{w}] targetCollector -w /path/to/wordlist -s -o targets.txt
+[{y}*{w}] amass enum -d example.com -o subdomains.txt && cat subdomains.txt | targetCollector -s -o targets.txt
     """
-    parser = OptionParser(usage=usage)
-    parser.add_option('-w', '--wordlist', type='string', dest='wordlist', help='File containing a list of subdomains -- (sub-domain.example.com)')
-    parser.add_option('-s', '--silent', action='store_true', dest='silent', default=False, help='Only show live domains')
-    parser.add_option('-o', '--outfile', type='string', dest='outfile', help='File to write target list to')
-    (options, args) = parser.parse_args()
-    main()
+	parser = OptionParser(usage=usage)
+	parser.add_option('-w', '--wordlist', type='string', dest='wordlist', help='File containing a list of subdomains -- (sub-domain.example.com)')
+	parser.add_option('-s', '--silent', action='store_true', dest='silent', default=False, help='Only show live domains')
+	parser.add_option('-o', '--outfile', type='string', dest='outfile', help='File to write target list to')
+	parser.add_option('-t', '--timeout', type=float, dest='timeout', help='http request timeout value (specify float value eg. 3.0)')
+	(options, args) = parser.parse_args()
+	
+	main()
