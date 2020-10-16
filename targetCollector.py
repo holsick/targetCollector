@@ -102,6 +102,7 @@ class TargetCollector:
 				_f.write(target + '\n')
 
 def main():
+    # we need an output file
 	if not options.outfile:
 		print(f'{w}[{r}!{w}] Please specify an output file\n')
 		parser.print_help()
