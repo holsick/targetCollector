@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, inital-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="targetCollector.js"></script>
+    <style>
+      #progress {
+        width: 50%;
+        background-color: black;
+      }
+
+      #progress-bar {
+        width: 2%;
+        height: 20px;
+        background-color: #4CAF50;
+      }
+    </style>
+  </head>
+  <body style="background-color:black">
+    <!-- header -->
+    <header class="w3-container w3-center" style="background-color:lightgrey;padding:128px 16px;border-bottom:10px solid black;border-top:10px solid black;border-radius:350px;">
+      <h1 class="w3-margin w3-jumbo">targetCollector WebView</h1>
+      <p class="w3-xlarge">Input your subdomain list and obtain a list of valid targets!</p>
+      <p class="w3-xlarge">targetCollector automatically processes your data on page load, so make sure to have your subdomains.txt file populated!</p>
+      <button id="fetch-data" class="w3-button w3-black w3-padding-large w3-large w3-margin-top" style="width:auto;border-radius:100px;">Fetch Data</button>
+      <button id="result-btn" class="w3-button w3-black w3-padding-large w3-large w3-margin-top" style="width:auto;border-radius:100px;" data-toggle="modal" data-target="#resultModal">View Results</button><br><br><br>
+      <p id="loading"></p><br>
+      <div id="progress" style="margin:0 auto;visibility:hidden;">
+        <div id="progress-bar"></div>
+      </div>
+    </header>
+    <!-- end header -->
+
+    <!-- results displayed in this modal here -->
+    <div class="modal fade right" id="resultModal" tabindex="-1" role="dialog" aria-labelledby="resultModal" aria-hidden="true">
+      <div class="modal-dialog-full-width modal-dialog momodel modal-fluid" role="document">
+        <div class="modal-content-full-width modal-content ">
+          <div class="modal-header modal-header-full-width text-center">
+            <h5 class="modal-title w-100" id="resultModal"><a href="https://github.com/holsick/targetCollector">Documentation</a></h5>
+          </div>
+  
+          <h1 class="section-heading text-center wow fadeIn my-5 pt-3" style="color:grey;font-family:cursive;">targetCollector Results</h1>
+          <div class="modal-footer modal-footer-full-width">
+            <button type="button" id="clear-data" class="btn btn-danger btn-md btn-rounded w3-center" style="width:350px;float:left;border-radius:100px;" data-dismiss="modal">Close Results and Clear Data</button>
+            <button type="button" id="copy" class="btn btn-primary btn-md btn-rounded w3-center" style="width:350px;border-radius:100px;">Save Results to File</button>
+            <div class="modal-body">
+              <div class="split left">
+                <div style="float:left;">
+                  <h2 style="color:green;font-family:cursive;">Live Domains Found</h2>
+                  <hr class="horizontal">
+                  <p style="float:left;text-align:left;" id="liveDomains"></p>
+                </div>
+              </div>
+              
+              <div class="split right">
+                <div style="float:left;text-align:left;">
+                  <h2 style="color:purple;font-family:cursive;">Detected Redirections</h2>
+                  <hr class="horizontal">
+                  <p style="float:left;" id="redirections"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- end modal -->
+
+    <!-- footer -->
+    <div class="w3-row-padding w3-padding-64 w3-container">
+        <div class="w3-content">
+          <h1>How to Use</h1>
+          <ol class="w3-padding-32" style="font-size:18px;">
+              <li>Place your subdomain list into the subdomains.txt file for targetCollector to load. (this creates the data for the targetCollector object)</li>
+              <li>Click <code style="background-color: grey;">Fetch Data</code> to run the getStatus() object method for each subdomain in subdomains.txt</li>
+              <li><p>Click <code style="background-color:grey;">View Results</code></p></li>
+              <li>targetCollector will display the results into two columns where you can copy the results or save to file</li>
+          </ol>
+      </div>
+    </div>
+    <!-- end footer -->
+
+    <script type="text/javascript">
+
+      function checkProcessedFile() {
+        var checkArray = targetCollector.collectedData.processedDomains;
+        var isEmpty = checkArray.every(function(item) {
+          return item == '';
+        });
+        return isEmpty;
+      }
+
+      function showProgress() {
+        var element = document.getElementById('progress-bar');
+        var width = 0;
+        var identity = setInterval(scene, 10);
+        element.style.visibility = 'visible';
+        function scene() {
+          if (width >= 100) {
+            clearInterval(identity);
+          } else {
+            width++;
+            element.style.width = width + '%';
+            element.innerHTML = width * 1 + '%';
+          }
+        }
+      }
+
+      function saveToFile(content, filename, contentType) {
+        var file = new Blob([content], { type: contentType });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(file);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+
+      function removeEmpty(arr) {
+        var index = arr.indexOf('');
+        if (index > -1) {
+          arr.splice(index, 1);
+        }
+        return arr;
+      }
+
+      targetCollector.processFile();
+
+      setTimeout(function() {
+        var check = checkProcessedFile();
+        if (check == true) {
+          document.getElementById('loading').innerHTML = 'Your subdomains.txt file does not contain any data';
+          document.getElementById('fetch-data').disabled = true;
+        }
+      }, 1000);
+
+      document.getElementById('result-btn').addEventListener('click', function() {
+        targetCollector.collectedData.liveDomains.forEach(function(entry) {
+          document.getElementById('liveDomains').innerHTML += entry + '<br>';
+        });
+        targetCollector.collectedData.redirections.forEach(function(entry) {
+          document.getElementById('redirections').innerHTML += entry + '<br>';
+        });
+      });
+
+      document.getElementById('clear-data').addEventListener('click', function() {
+        document.getElementById('liveDomains').innerHTML = '';
+        document.getElementById('redirections').innerHTML = '';
+      });
+
+      document.getElementById('copy').addEventListener('click', function() {
+        var timeWhenRan = new Date().toISOString().slice(0, 10);
+        var liveDomainsArray = document.getElementById('liveDomains').innerText.split('\n');
+        var redirectionsArray = document.getElementById('redirections').innerText.split('\n');
+        var fullArray = removeEmpty(liveDomainsArray.concat(removeEmpty(redirectionsArray)));
+        saveToFile(fullArray.join('\n'), 'results-' + timeWhenRan + '.txt', 'text/plain');
+      });
+      
+      document.getElementById('fetch-data').addEventListener('click', function() {
+        var loader = document.getElementById('loading');
+        if (loader.innerHTML === 'DONE' || loader.innerHTML === 'Data already fetched. Please refresh') {
+          loader.innerHTML = 'Data already fetched. Please refresh';
+          return;
+        }
+        targetCollector.collectedData.processedDomains.forEach(function(subdomain) {
+          setTimeout(function() {
+            targetCollector.getStatus(subdomain);
+            loader.innerHTML = 'DONE';
+            document.getElementById('progress-bar').style.visibility = 'hidden';
+          }, 2000);
+          loader.innerHTML = 'Fetching Data...';
+          showProgress();
+        });
+      });
+    </script>
+  </body>
+</html>
