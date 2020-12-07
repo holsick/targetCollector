@@ -1,21 +1,4 @@
 /* main styles */
- h1, h2, h3, h4, h5, h6 { 
-    font-family: cursive !important;
-    font-weight: bold;
-}
-
-body {
-    font-family: cursive !important;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    height: 100%;
-}
-
-button:hover {
-    opacity: 0.8;
-}
-
 .modal-dialog-full-width {
     width: 100% !important;
     height: 100% !important;
@@ -27,16 +10,18 @@ button:hover {
 .modal-content-full-width {
     height: auto !important;
     min-height: 100% !important;
+    width: 100% !important;
+    border: none !important;
     border-radius: 0 !important;
-    background-color: black !important;
+    background-color: slategrey !important;
 }
 
 .modal-header-full-width {
-    border-bottom: 1px solid black !important;
+    border-bottom: none !important;
 }
 
 .modal-footer-full-width {
-    border-top: 1px solid black !important;
+    border-top: none !important;
 }
 
 .split {
