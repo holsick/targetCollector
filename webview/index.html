@@ -154,7 +154,7 @@
 
       document.getElementById('result-btn').addEventListener('click', function() {
         targetCollector.collectedData.liveDomains.forEach(function(entry) {
-          document.getElementById('liveDomains').innerHTML += entry + '<br>';
+          document.getElementById('liveDomains').innerHTML += '<a href="' + entry + '">' + entry + '</a><br>';
         });
         targetCollector.collectedData.redirections.forEach(function(entry) {
           document.getElementById('redirections').innerHTML += entry + '<br>';
