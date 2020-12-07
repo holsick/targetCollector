@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, inital-scale=1">
+    <link rel="stylesheet" href="style.css" type="text/css">
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
@@ -23,35 +23,54 @@
         height: 20px;
         background-color: #4CAF50;
       }
+      h1, h2, h3, h4, h5, h6 { 
+        font-family: cursive !important;
+        font-weight: bold;
+      }
+      body {
+          font-family: cursive !important;
+          padding: 0;
+          margin: 0;
+          width: 100%;
+          height: 100%;
+      }
+      button:hover {
+          opacity: 0.8;
+      }
     </style>
   </head>
-  <body style="background-color:black">
+  <body style="background-color:slategrey">
     <!-- header -->
-    <header class="w3-container w3-center" style="background-color:lightgrey;padding:128px 16px;border-bottom:10px solid black;border-top:10px solid black;border-radius:350px;">
-      <h1 class="w3-margin w3-jumbo">targetCollector WebView</h1>
-      <p class="w3-xlarge">Input your subdomain list and obtain a list of valid targets!</p>
-      <p class="w3-xlarge">targetCollector automatically processes your data on page load, so make sure to have your subdomains.txt file populated!</p>
+    <header class="w3-container w3-center" style="background-color:slategrey;padding:128px 16px;">
+      <canvas id="background" style="position:absolute;top:0;left:0;opacity:0.9"></canvas>
+      <h1 class="w3-margin w3-jumbo" id="title" style="color:black;">targetCollector WebView</h1>
+      <h1>Author: @holsick</h1>
+    </header>
+    <!-- end header -->
+    
+    <br><br><br><br>
+    <p class="w3-xlarge w3-center">Click below to start collecting valid targets!</p>
+    <div class="w3-center">
       <button id="fetch-data" class="w3-button w3-black w3-padding-large w3-large w3-margin-top" style="width:auto;border-radius:100px;">Fetch Data</button>
       <button id="result-btn" class="w3-button w3-black w3-padding-large w3-large w3-margin-top" style="width:auto;border-radius:100px;" data-toggle="modal" data-target="#resultModal">View Results</button><br><br><br>
       <p id="loading"></p><br>
       <div id="progress" style="margin:0 auto;visibility:hidden;">
-        <div id="progress-bar"></div>
+        <div id="progress-bar" style="border-radius:100px;"></div>
       </div>
-    </header>
-    <!-- end header -->
+    </div>
 
     <!-- results displayed in this modal here -->
     <div class="modal fade right" id="resultModal" tabindex="-1" role="dialog" aria-labelledby="resultModal" aria-hidden="true">
       <div class="modal-dialog-full-width modal-dialog momodel modal-fluid" role="document">
-        <div class="modal-content-full-width modal-content ">
+        <div class="modal-content-full-width modal-content">
           <div class="modal-header modal-header-full-width text-center">
             <h5 class="modal-title w-100" id="resultModal"><a href="https://github.com/holsick/targetCollector">Documentation</a></h5>
           </div>
   
-          <h1 class="section-heading text-center wow fadeIn my-5 pt-3" style="color:grey;font-family:cursive;">targetCollector Results</h1>
+          <h1 class="section-heading text-center wow fadeIn my-5 pt-3" style="color:black;font-family:cursive;">targetCollector Results</h1>
           <div class="modal-footer modal-footer-full-width">
-            <button type="button" id="clear-data" class="btn btn-danger btn-md btn-rounded w3-center" style="width:350px;float:left;border-radius:100px;" data-dismiss="modal">Close Results and Clear Data</button>
-            <button type="button" id="copy" class="btn btn-primary btn-md btn-rounded w3-center" style="width:350px;border-radius:100px;">Save Results to File</button>
+            <button type="button" id="clear-data" class="w3-button w3-black w3-padding-large w3-large" style="width:350px;float:left;border-radius:100px;" data-dismiss="modal">Close Results and Clear Data</button>
+            <button type="button" id="copy" class="w3-button w3-black w3-padding-large w3-large" style="width:350px;border-radius:100px;">Save Results to File</button>
             <div class="modal-body">
               <div class="split left">
                 <div style="float:left;">
@@ -76,20 +95,11 @@
     <!-- end modal -->
 
     <!-- footer -->
-    <div class="w3-row-padding w3-padding-64 w3-container">
-        <div class="w3-content">
-          <h1>How to Use</h1>
-          <ol class="w3-padding-32" style="font-size:18px;">
-              <li>Place your subdomain list into the subdomains.txt file for targetCollector to load. (this creates the data for the targetCollector object)</li>
-              <li>Click <code style="background-color: grey;">Fetch Data</code> to run the getStatus() object method for each subdomain in subdomains.txt</li>
-              <li><p>Click <code style="background-color:grey;">View Results</code></p></li>
-              <li>targetCollector will display the results into two columns where you can copy the results or save to file</li>
-          </ol>
-      </div>
-    </div>
     <!-- end footer -->
 
     <script type="text/javascript">
+
+      document.getElementById('title').focus();
 
       function checkProcessedFile() {
         var checkArray = targetCollector.collectedData.processedDomains;
@@ -180,6 +190,118 @@
           showProgress();
         });
       });
+
+      /* some sick js animations */
+      (function () {
+        var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || 
+        window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || function(callback) {
+          window.setTimeout(callback, 1000 / 60);
+        };
+        window.requestAnimationFrame = requestAnimationFrame;
+      })();
+
+      var background = document.getElementById('background');
+      var backgroundContext = background.getContext('2d');
+      var width = window.innerWidth;
+      var height = 420;// can be changed
+
+      //(height < 400) ? height = 400 : height; -- cap if needed
+
+      background.width = width;
+      background.height = height;
+      background.style.borderBottom = '20px solid black';
+
+      // canvas used for the stars
+      backgroundContext.fillStyle = '#05004c';
+      backgroundContext.fillRect(0, 0, width, height);
+
+      // stars
+      function Star(options) {
+        this.size = Math.random() * 2;
+        this.speed = Math.random() * 1;
+        this.x = options.x;
+        this.y = options.y;
+      }
+
+      Star.prototype.reset = function() {
+        this.size = Math.random() * 2;
+        this.speed = Math.random() * 1;
+        this.x = width;
+        this.y = Math.random() * height;
+      };
+
+      Star.prototype.update = function() {
+        this.x -= this.speed;
+        if (this.x < 0) {
+          this.reset();
+        } else {
+          backgroundContext.fillRect(this.x, this.y, this.size, this.size);
+        }
+      };
+
+      function ShootingStar() {
+        this.reset();
+      }
+
+      ShootingStar.prototype.reset = function() {
+        this.x = Math.random() * width;
+        this.y = 0;
+        this.len = (Math.random() * 80) + 10;
+        this.speed = (Math.random() * 10) + 6;
+        this.size = (Math.random() * 1) + 0.1;
+        // this is used so the shooting stars arent constant
+        this.waitTime = new Date().getTime() + (Math.random() * 3000) + 500;
+        this.active = false;
+      };
+
+      ShootingStar.prototype.update = function() {
+        if (this.active) {
+          this.x -= this.speed;
+          this.y += this.speed;
+          if (this.x < 0 || this.y >= height) {
+            this.reset();
+          } else {
+            backgroundContext.lineWidth = this.size;
+            backgroundContext.beginPath();
+            backgroundContext.moveTo(this.x, this.y);
+            backgroundContext.lineTo(this.x + this.len, this.y - this.len);
+            backgroundContext.stroke();
+          }
+        } else {
+          if (this.waitTime < new Date().getTime()) {
+            this.active = true;
+          }
+        }
+      };
+
+      var entities = [];
+
+        // init the stars
+      for (var i = 0; i < height; i++) {
+        entities.push(new Star({
+          x: Math.random() * width,
+          y: Math.random() * height
+        }));
+      }
+
+      entities.push(new ShootingStar());
+      entities.push(new ShootingStar());
+
+      function animate() {
+        backgroundContext.fillStyle = '#110E19';
+        backgroundContext.fillRect(0, 0, width, height);
+        backgroundContext.fillStyle = '#ffffff';
+        backgroundContext.strokeStyle = '#ffffff';
+
+        var entLen = entities.length;
+
+        while (entLen--) {
+          entities[entLen].update();
+        }
+        requestAnimationFrame(animate);
+      }
+
+      animate();
     </script>
   </body>
 </html>
