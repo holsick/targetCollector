@@ -1,0 +1,98 @@
+#!/bin/bash
+
+red=$(tput setaf 1)
+green=$(tput setaf 2)
+yellow=$(tput setaf 3)
+blue=$(tput setaf 4)
+purple=$(tput setaf 5)
+cyan=$(tput setaf 6)
+white=$(tput setaf 7)
+
+
+function banner() {
+  echo -e "  _______                   _      _____      _ _           _"
+  echo -e " |__   __|                 | |    / ____|    | | |         | |"
+  echo -e "    | | __ _ _ __ __ _  ___| |_  | |     ___ | | | ___  ___| |_ ___  _ __"
+  echo -e "    | |/ _\` | '__/ _\` |/ _ \ __| | |    / _ \| | |/ _ \/ __| __/ _ \| '__|"
+  echo -e "    | | (_| | | | (_| |  __/ |_  | |___| (_) | | |  __/ (__| || (_) | |"
+  echo -e "    |_|\__,_|_|  \__, |\___|\__|  \_____\___/|_|_|\___|\___|\__\___/|_|"
+  echo -e "                  __/ |"
+  echo -e "                 |___/"
+  
+  echo
+  echo -e "\t${green}Author${white}: @holsick"
+  echo -e "\t${green}Version${white}: 1.0"
+  echo -e "------------------------------------------------------------------------------\n"
+}
+
+function usage() {
+  echo -e "${yellow}Usage${white}:\n\n targetCollector -d list_of_domains.txt -t <timeout value>"
+  echo " targetCollector --domains list_of_subdomains.txt --timeout <timeout value>"
+}
+
+# Grab status codes and redirections
+function targetCollector() {
+  for subdomain in $(cat "$1"); do
+    response=$(curl -k -I -s -w "%{http_code}" -o response.txt "https://$subdomain" --connect-timeout $2)
+    if [ $response == "000" ]; then
+      echo -e "[${yellow}timeout${white}] $subdomain"
+    else
+      if [[ $response == "301" || $response == "302" ]]; then
+        if [ $response == "301" ]; then
+          echo "[${purple}$response${white}] $subdomain"
+        elif [ $response == "302" ]; then
+          echo "[${blue}$response${white}] $subdomain"
+        fi
+        redirection=$(cat response.txt | grep -i location | xargs)
+        echo -e "\t${blue}|"
+        echo -e "\t${blue}|___${green}$redirection${white}"
+      fi
+      if [ $response == "200" ]; then
+        echo "[${green}$response${white}] $subdomain"
+      elif [ $response == "403" ]; then
+        echo "[${red}$response${white}] $subdomain"
+      else
+        if [[ $response != "301" && $response != "302" ]]; then
+          echo "[${cyan}$response${white}] $subdomain"
+        fi
+      fi
+    fi
+  done
+}
+
+positional_args=()
+
+while [[ $# -gt 0 ]]; do
+  key="$1"
+  case $key in
+    -d|--domains)
+      domains="$2"
+      shift
+      shift
+      ;;
+    -t|--timeout)
+      timeout="$2"
+      shift
+      shift
+      ;;
+    -h|--help)
+      banner
+      usage
+      exit
+      ;;
+    *)
+      positional_args+=("$1")
+      shift
+      ;;
+  esac
+done
+
+banner
+
+# Check for any missing required arguments
+if [[ -z "$domains" || -z "$timeout" ]]; then
+  echo "[${red}Missing Arguments${white}] Please use -h or --help for usage"
+  exit 1
+fi
+
+targetCollector $domains $timeout
